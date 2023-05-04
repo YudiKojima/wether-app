@@ -6,6 +6,7 @@ const BASE_URL = "https://api.openweathermap.org/data/2.5";
 const getWeatherData = (infoType, searchParams) => {
   const url = new URL(BASE_URL + "/" + infoType);
   url.search = new URLSearchParams({ ...searchParams, appid: API_KEY });
+  //console.log(url.search);
 
   return fetch(url).then((res) => res.json());
 };
@@ -21,7 +22,7 @@ const formatCurrentWeather = (data) => {
     wind: { speed },
   } = data;
 
-  const { main: detailes, icon } = weather[0];
+  const { weather: details, icon } = weather[0];
 
   return {
     lat,
@@ -36,15 +37,14 @@ const formatCurrentWeather = (data) => {
     country,
     sunrise,
     sunset,
-    detailes,
+    details,
     icon,
     speed,
   };
 };
 
 const formatForecastWeather = (data) => {
-  let { timezone } = data;
-  /*
+  let { timezone, daily, hourly } = data;
   daily = daily?.slice(1, 6).map((d) => {
     return {
       title: formatToLocalTime(d.dt, timezone, "ccc"),
@@ -60,9 +60,8 @@ const formatForecastWeather = (data) => {
       icon: d.weather[0].icon,
     };
   });
-  */
 
-  return { timezone };
+  return { timezone, daily, hourly };
 };
 
 const getFomattedWeatherData = async (searchParams) => {
@@ -83,11 +82,15 @@ const getFomattedWeatherData = async (searchParams) => {
   return { ...formattedCurrentWeather, ...formattedForecastWeather };
 };
 
+// parseInt consert to error
 const formatToLocalTime = (
   secs,
   zone,
   format = "cccc, dd LLL yyyy' | Local time: 'hh:mm a"
-) => DateTime.fromSeconds(secs).setZone(zone).toFormat(format);
+) => {
+  const date = DateTime.fromSeconds(parseInt(secs)).setZone(zone);
+  return date.toFormat(format);
+};
 
 const iconUrlFromCode = (code) =>
   `http://openweathermap.org/img/wn/${code}@2x.png`;
